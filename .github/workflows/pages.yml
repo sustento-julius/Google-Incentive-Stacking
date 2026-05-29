@@ -1,0 +1,49 @@
+name: Deploy 3 Mins Local to GitHub Pages
+
+# Publishes app.html (and the explainer) as a live website you can open in
+# Safari. The site root loads the browser app directly.
+
+on:
+  push:
+    branches: ["claude/3-mins-local-pipeline-hAm9p", "main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages (auto-enable)
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp app.html _site/index.html
+          cp app.html _site/app.html
+          [ -f explainer.html ] && cp explainer.html _site/explainer.html || true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
