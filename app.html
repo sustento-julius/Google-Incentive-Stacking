@@ -92,6 +92,12 @@
       <button class="primary" id="btnLive">🔄 Fetch the latest LA City Council meeting</button>
       <button class="ghost small" id="btnSample">▶︎ Use the built-in sample meeting</button>
     </div>
+    <label class="field" for="meetUrl">…or paste a specific meeting / transcript link (most reliable — click a meeting on <a href="https://clerk.lacity.gov/calendar" target="_blank">clerk.lacity.gov/calendar</a> and copy its URL)</label>
+    <div class="inline">
+      <input type="text" id="meetUrl" placeholder="https://clerk.lacity.gov/…  or  https://lacity.primegov.com/Portal/Meeting?meetingTemplateId=…" style="flex:3" />
+      <button class="ghost" id="btnFromUrl" style="flex:1;min-width:130px">Fetch from link</button>
+    </div>
+    <button class="ghost small" id="btnDiag" style="margin-top:8px">🔧 Inspect source (debug — copy the log to me)</button>
     <div class="banner live" id="bLive"></div>
     <div class="banner demo" id="bDemo"></div>
     <div class="banner fail" id="bFail"></div>
@@ -238,43 +244,58 @@ $("useAI").addEventListener("change",e=>{$("aiBox").style.display=e.target.check
 const PROXIES=[u=>"https://corsproxy.io/?url="+encodeURIComponent(u),u=>"https://api.allorigins.win/raw?url="+encodeURIComponent(u),u=>u];
 async function proxiedFetch(url,asJson){let lastErr;for(const wrap of PROXIES){const via=wrap(url);try{log("  → "+via.slice(0,72),"dim");const r=await fetch(via,{headers:{Accept:asJson?"application/json,*/*":"text/html,*/*"}});if(!r.ok){lastErr=new Error("HTTP "+r.status);log("    HTTP "+r.status,"warn");continue;}const txt=await r.text();if(txt&&txt.length>30){return asJson?JSON.parse(txt):txt;}lastErr=new Error("empty body");}catch(e){lastErr=e;log("    "+e.message,"warn");}}throw lastErr||new Error("all strategies failed");}
 
-// Best-effort live retrieval of the latest council meeting transcript.
+function looksLikeTranscript(text){
+  return text && text.split(/\s+/).length>200 && (/(^|\n)\s*>>/.test(text) || /\[\d{1,2}:\d{2}(?::\d{2})?\]/.test(text) || /next speaker|public comment|state your name/i.test(text));
+}
+function absolutize(href,base){ try{ return new URL(href, base).href; }catch(e){ return href; } }
+
+// Dump what we actually received so it can be pasted back to debug the parser.
+function dumpDiag(label,body,base){
+  log("──── DIAGNOSTIC ("+label+") — copy everything below to your developer ────","warn");
+  log("bytes: "+body.length,"dim");
+  const links=[...body.matchAll(/href=["']([^"']+)["']/gi)].map(m=>m[1]);
+  log("links found: "+links.length,"dim");
+  const interesting=[...new Set(links.filter(h=>/transcript|cart|agenda|meeting|document|\.txt|\.pdf|primegov|\.htm/i.test(h)))];
+  log("candidate links ("+interesting.length+"):","dim");
+  interesting.slice(0,30).forEach(h=>log("   "+absolutize(h,base||location.href),"dim"));
+  // embedded JSON blobs (SPAs)
+  const json=body.match(/<script[^>]*application\/json[^>]*>([\s\S]{0,400})/i);
+  if(json) log("embedded JSON (first 400): "+json[1],"dim");
+  log("first 1800 chars of body:","dim");
+  log(body.slice(0,1800),"dim");
+  log("──── END DIAGNOSTIC ────","warn");
+}
+
+// Fetch a transcript from a specific meeting / transcript URL (most reliable).
+async function fetchFromUrl(url){
+  clearLog();log("Fetching "+url+" (via your browser)…");
+  const body=await proxiedFetch(url,false);
+  const text=stripHtml(body);
+  if(looksLikeTranscript(text)){ log("That page is itself a transcript ("+text.length+" chars).","ok"); return {transcript:text,meeting:{id:"url",title:"Los Angeles City Council",date:"",committee:"City Council"},source:url}; }
+  // Otherwise follow transcript-ish links on the page.
+  const links=[...new Set([...body.matchAll(/href=["']([^"']+)["']/gi)].map(m=>m[1]))];
+  const cand=links.filter(h=>/transcript|cart|\.txt/i.test(h));
+  log("page wasn't a transcript; trying "+cand.length+" candidate link(s)…");
+  for(let h of cand){ const u=absolutize(h,url); try{ const t=stripHtml(await proxiedFetch(u,false)); if(looksLikeTranscript(t)){ log("Got transcript from "+u,"ok"); return {transcript:t,meeting:{id:"url",title:"Los Angeles City Council",date:"",committee:"City Council"},source:u}; } }catch(e){ log("   "+u+" → "+e.message,"warn"); } }
+  dumpDiag("meeting page", body, url);
+  throw new Error("Couldn't find a transcript at that link — see diagnostic above.");
+}
+
+// Best-effort auto retrieval starting from the public calendar.
 async function fetchLatestMeeting(){
   clearLog();log("Fetching latest LA City Council meeting (in your browser)…");
-  // Strategy A: PrimeGov public API (current LA agenda system).
-  try{
-    log("Trying PrimeGov API…");
-    const list=await proxiedFetch("https://lacity.primegov.com/api/v2/PublicPortal/ListArchivedMeetings",true);
-    const arr=Array.isArray(list)?list:(list.value||list.data||[]);
-    const councils=arr.filter(m=>/council/i.test(m.title||m.meetingName||"")&&!/committee/i.test(m.title||""));
-    const pick=(councils[0]||arr[0]);
-    if(pick){
-      log("  found meeting: "+(pick.title||pick.meetingName)+" ("+(pick.dateTime||pick.date||"?")+")","ok");
-      const docs=pick.documentList||pick.documents||[];
-      const tdoc=docs.find(d=>/transcript|cart/i.test(d.templateName||d.name||d.type||""));
-      if(tdoc){
-        const id=tdoc.id||tdoc.documentId;
-        for(const pat of [
-          "https://lacity.primegov.com/Portal/Meeting/Document/"+id,
-          "https://lacity.primegov.com/api/v2/PublicPortal/CompiledDocument/"+id,
-          "https://lacity.primegov.com/Portal/viewer?id="+id]){
-          try{const t=await proxiedFetch(pat,false);if(t&&/>>|\[\d{1,2}:\d{2}/.test(t)){
-            return {transcript:stripHtml(t),meeting:{id:"primegov-"+(pick.id||"latest"),title:pick.title||pick.meetingName||"Los Angeles City Council",date:(pick.dateTime||"").slice(0,10),committee:"City Council"},source:"PrimeGov"};
-          }}catch(e){}
-        }
-        log("  found a transcript document but couldn't read its text.","warn");
-      }else log("  meeting had no transcript/CART document listed.","warn");
-    }
-  }catch(e){log("  PrimeGov failed: "+e.message,"warn");}
-  // Strategy B: City Clerk calendar HTML (look for a transcript link).
-  try{
-    log("Trying City Clerk calendar…");
-    const html=await proxiedFetch("https://clerk.lacity.gov/calendar",false);
-    const m=html.match(/href="([^"]*(?:transcript|cart)[^"]*)"/i);
-    if(m){let u=m[1];if(u.startsWith("/"))u="https://clerk.lacity.gov"+u;log("  transcript link: "+u,"ok");const t=await proxiedFetch(u,false);return{transcript:stripHtml(t),meeting:{id:"clerk-latest",title:"Los Angeles City Council",date:"",committee:"City Council"},source:"City Clerk"};}
-    log("  no transcript link found on calendar page.","warn");
-  }catch(e){log("  City Clerk failed: "+e.message,"warn");}
-  throw new Error("Could not retrieve a live transcript.");
+  log("Loading the City Clerk calendar…");
+  const html=await proxiedFetch("https://clerk.lacity.gov/calendar",false);
+  // direct transcript link?
+  let m=html.match(/href=["']([^"']*(?:transcript|cart)[^"']*)["']/i);
+  if(m){ const u=absolutize(m[1],"https://clerk.lacity.gov/calendar"); log("Found a transcript link: "+u,"ok"); const t=stripHtml(await proxiedFetch(u,false)); if(looksLikeTranscript(t)) return {transcript:t,meeting:{id:"clerk-latest",title:"Los Angeles City Council",date:"",committee:"City Council"},source:"City Clerk"}; }
+  // else follow the first council meeting link and look there
+  const links=[...new Set([...html.matchAll(/href=["']([^"']+)["']/gi)].map(x=>x[1]))];
+  const meetingLinks=links.filter(h=>/meeting|agenda|primegov|council/i.test(h)).slice(0,4);
+  log("No direct transcript link; probing "+meetingLinks.length+" meeting link(s)…");
+  for(let h of meetingLinks){ const u=absolutize(h,"https://clerk.lacity.gov/calendar"); try{ const r=await fetchFromUrl(u); return r; }catch(e){} }
+  dumpDiag("calendar page", html, "https://clerk.lacity.gov/calendar");
+  throw new Error("Could not auto-locate a transcript — see diagnostic above.");
 }
 function stripHtml(s){if(!/[<][a-z!]/i.test(s))return s;const d=document.createElement("div");d.innerHTML=s;return (d.textContent||d.innerText||"").replace(/\n{3,}/g,"\n\n");}
 
@@ -284,18 +305,35 @@ function loadSample(){
 }
 
 $("btnSample").addEventListener("click",loadSample);
-$("btnLive").addEventListener("click",async()=>{
-  $("btnLive").disabled=true;$("btnLive").textContent="⏳ Fetching…";
-  try{
-    const res=await fetchLatestMeeting();
-    $("transcript").value=res.transcript;$("meetTitle").value=res.meeting.title;$("meetDate").value=res.meeting.date;$("meetCmte").value=res.meeting.committee;
-    banner("bLive","✅ Pulled a live transcript from "+res.source+". Click “Write the newsletter” below.");
-    log("Success — "+res.transcript.length+" chars of transcript.","ok");
-  }catch(e){
-    log("Live fetch failed: "+e.message,"err");
+
+function applyResult(res){
+  $("transcript").value=res.transcript;
+  $("meetTitle").value=res.meeting.title||$("meetTitle").value;
+  $("meetDate").value=res.meeting.date||$("meetDate").value;
+  $("meetCmte").value=res.meeting.committee||$("meetCmte").value;
+  banner("bLive","✅ Pulled a live transcript ("+res.transcript.length+" chars). Now click “✍️ Write the 3-minute newsletter” below.");
+  log("Success — transcript loaded.","ok");
+}
+async function runFetch(fn,btn,busyText,idleText){
+  btn.disabled=true;const old=btn.textContent;btn.textContent=busyText;
+  try{ applyResult(await fn()); }
+  catch(e){
+    log("Failed: "+e.message,"err");
     loadSample();
-    banner("bFail","Couldn't reach the LA City servers from your browser right now (they often block cross-site requests). I loaded the built-in sample instead so you can still see it work. If you want, copy the log above and send it to me and I'll fix the connection.");
-  }finally{$("btnLive").disabled=false;$("btnLive").textContent="🔄 Fetch the latest LA City Council meeting";}
+    banner("bFail","Couldn't pull that automatically. I loaded the built-in sample so you can still see it work. Tip: paste a specific meeting link above and hit “Fetch from link”, or click “🔧 Inspect source”, then copy the whole dark log box and send it to me — I'll wire up the exact parser from what your browser sees.");
+  }finally{ btn.disabled=false;btn.textContent=idleText; }
+}
+$("btnLive").addEventListener("click",()=>runFetch(fetchLatestMeeting,$("btnLive"),"⏳ Fetching…","🔄 Fetch the latest LA City Council meeting"));
+$("btnFromUrl").addEventListener("click",()=>{
+  const u=$("meetUrl").value.trim();
+  if(!u){banner("bFail","Paste a meeting or transcript link first.");return;}
+  runFetch(()=>fetchFromUrl(u),$("btnFromUrl"),"⏳…","Fetch from link");
+});
+$("btnDiag").addEventListener("click",async()=>{
+  clearLog();const u=$("meetUrl").value.trim()||"https://clerk.lacity.gov/calendar";
+  log("Inspecting "+u+" …");
+  try{ const body=await proxiedFetch(u,false); dumpDiag("manual inspect",body,u); log("Done — copy the whole box above and send it to your developer.","ok"); }
+  catch(e){ log("Inspect failed: "+e.message,"err"); }
 });
 
 async function callGemini(system,prompt,key,model){
