@@ -11,6 +11,10 @@ scannable ~3-minute newsletter.
 > _"I understand what happened, why it matters, and I didn't have to sit through
 > six hours of public meetings."_
 
+**New to this / not a coder?** Open [`explainer.html`](explainer.html) in any
+browser for a plain-English, visual walkthrough of what the app does, how it
+works, and what you can change.
+
 ---
 
 ## What it does
