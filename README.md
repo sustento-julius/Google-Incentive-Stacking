@@ -15,6 +15,13 @@ scannable ~3-minute newsletter.
 browser for a plain-English, visual walkthrough of what the app does, how it
 works, and what you can change.
 
+**Just want to run it in your browser?** Open [`app.html`](app.html) in Safari
+(or any browser) — no install, no terminal. It generates the newsletter from a
+meeting transcript right on the page, including the public-comment ranking. It
+can fetch the latest LA City Council meeting live (in your browser), falls back
+to a built-in sample if the city's servers can't be reached, and can optionally
+use a Gemini API key for richer prose.
+
 ---
 
 ## What it does
