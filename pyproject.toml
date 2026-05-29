@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "three-mins-local"
+version = "0.1.0"
+description = "3 Mins Local — the fastest way to understand what actually happened at LA City Hall."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+ai = ["google-genai>=0.3"]
+whisper = ["faster-whisper>=1.0", "yt-dlp>=2024.1.0"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+three-mins-local = "three_mins_local.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+three_mins_local = ["fixtures/*.json", "fixtures/*.txt"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

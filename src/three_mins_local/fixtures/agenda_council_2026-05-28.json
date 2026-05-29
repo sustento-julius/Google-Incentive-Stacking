@@ -1,0 +1,37 @@
+{
+  "meeting_id": "council-2026-05-28",
+  "items": [
+    {
+      "item_id": "24-0455",
+      "title": "Tenant Anti-Harassment Ordinance",
+      "description": "Ordinance amending the Los Angeles Municipal Code to establish a tenant anti-harassment program with administrative penalties for landlords who interrupt essential services such as water and heat to force tenants out.",
+      "item_type": "ordinance",
+      "action": "adopted",
+      "vote": "12-0"
+    },
+    {
+      "item_id": "23-1102",
+      "title": "Mobility Corridor Optimization, Central Avenue",
+      "description": "Mobility corridor optimization project on Central Avenue, including a dedicated bus lane and protected bike lane between Vernon and Slauson, with associated parking removal.",
+      "item_type": "project",
+      "action": "continued two weeks",
+      "vote": ""
+    },
+    {
+      "item_id": "24-0600-S29",
+      "title": "Interim Housing Allocation, CD 1 and CD 14",
+      "description": "Authorization to allocate $12,000,000 in Homeless Housing, Assistance and Prevention (HHAP) funds for 200 interim housing beds in Council Districts 1 and 14.",
+      "item_type": "funding",
+      "action": "adopted",
+      "vote": "11-1"
+    },
+    {
+      "item_id": "25-0210",
+      "title": "LA28 Games Mobility Hub Feasibility Report",
+      "description": "Report from the Department of Transportation on transit-oriented mobility hubs and value capture financing options ahead of the 2028 Olympic Games.",
+      "item_type": "report",
+      "action": "received and filed",
+      "vote": ""
+    }
+  ]
+}

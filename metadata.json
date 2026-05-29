@@ -1,6 +1,0 @@
-{
-  "name": "LA MF Affordable Retrofit Incentive-Stacker",
-  "description": "Calculate and stack federal IRA tax credits, California state SGIP/SOMAH/TECH rebates, and local LA utility programs for Naturally Occurring Affordable Housing (NOAH) and Non-profit multifamily buildings of 5-49+ units in Los Angeles, with a Gemini-powered decarbonization advisor.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

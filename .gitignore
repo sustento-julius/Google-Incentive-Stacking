@@ -1,8 +1,28 @@
-node_modules/
-build/
-dist/
-coverage/
-.DS_Store
-*.log
+# Secrets
 .env*
 !.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.venv/
+venv/
+
+# Pipeline artifacts (newsletters, downloaded media, cached transcripts)
+output/
+!output/.gitkeep
+cache/
+*.mp4
+*.mp3
+*.wav
+
+# Misc
+.DS_Store
+*.log
+node_modules/
+coverage/

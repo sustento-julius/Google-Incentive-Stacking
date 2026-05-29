@@ -1,0 +1,21 @@
+{
+  "meeting_id": "housing-cmte-2026-05-27",
+  "items": [
+    {
+      "item_id": "25-0331",
+      "title": "Permanent Supportive Housing via Adaptive Reuse",
+      "description": "Report on expanding the permanent supportive housing pipeline through adaptive reuse of vacant commercial buildings, projecting roughly 1,200 supportive units over three years at about 40% of new-construction cost.",
+      "item_type": "report",
+      "action": "recommended to full council",
+      "vote": ""
+    },
+    {
+      "item_id": "24-0455",
+      "title": "Tenant Anti-Harassment Ordinance — Enforcement Update",
+      "description": "Status update on staffing and inspector capacity for enforcing the tenant anti-harassment program, including community engagement on the complaint intake process.",
+      "item_type": "report",
+      "action": "received and filed",
+      "vote": ""
+    }
+  ]
+}

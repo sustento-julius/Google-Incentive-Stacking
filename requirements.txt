@@ -1,0 +1,19 @@
+# --- Core pipeline (required) ---
+requests>=2.31
+beautifulsoup4>=4.12
+python-dotenv>=1.0
+
+# --- AI generation (optional but recommended) ---
+# The newsletter + government-translation steps use Gemini when GEMINI_API_KEY
+# is set. Without it, the pipeline falls back to deterministic templates.
+google-genai>=0.3
+
+# --- Audio transcription (optional) ---
+# Only needed when a meeting has video but no CART transcript. Install one of:
+#   faster-whisper>=1.0     (recommended, CPU-friendly)
+#   openai-whisper>=20231117
+# yt-dlp + ffmpeg are used to pull audio from the video URL.
+# yt-dlp>=2024.1.0
+
+# --- Dev / tests ---
+pytest>=8.0

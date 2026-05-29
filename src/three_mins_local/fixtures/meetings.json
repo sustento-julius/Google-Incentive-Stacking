@@ -1,0 +1,25 @@
+{
+  "source": "LA City Clerk calendar (sample fixtures for offline runs)",
+  "meetings": [
+    {
+      "id": "council-2026-05-28",
+      "title": "Regular Meeting of the Los Angeles City Council",
+      "date": "2026-05-28",
+      "committee": "City Council",
+      "agenda_url": "https://clerk.lacity.gov/calendar/regular-council-2026-05-28",
+      "video_url": "https://www.youtube.com/@LACityClerk",
+      "transcript_url": "",
+      "council_files": ["24-0455", "23-1102", "24-0600-S29", "25-0210"]
+    },
+    {
+      "id": "housing-cmte-2026-05-27",
+      "title": "Housing and Homelessness Committee",
+      "date": "2026-05-27",
+      "committee": "Housing and Homelessness Committee",
+      "agenda_url": "https://clerk.lacity.gov/calendar/housing-homelessness-2026-05-27",
+      "video_url": "https://www.youtube.com/@LACityClerk",
+      "transcript_url": "",
+      "council_files": ["24-0455", "25-0331"]
+    }
+  ]
+}
