@@ -400,8 +400,9 @@ function newsletterMarkdown(nl){return `**SUBJECT:** ${nl.subject}\n\n# 3 Mins L
 $("btnCopy").addEventListener("click",()=>{navigator.clipboard.writeText(lastMarkdown).then(()=>{$("btnCopy").textContent="✓ Copied!";setTimeout(()=>$("btnCopy").textContent="📋 Copy as markdown",1500);});});
 $("btnPrint").addEventListener("click",()=>window.print());
 
-// On load: show the sample immediately so the page visibly "works".
+// On load: load sample AND auto-generate so the newsletter is visible immediately.
 loadSample();
+generate();
 </script>
 </body>
 </html>
