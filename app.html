@@ -74,6 +74,9 @@
   .copybar{display:flex;gap:10px;margin-top:14px}
   footer{color:var(--muted);font-size:.84rem;text-align:center;padding:24px 0 40px}
   a{color:var(--grape)}
+  .clip-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;margin:14px 0 6px}
+  .clip-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;border-radius:12px}
+  .clip-label{font-size:.78rem;color:var(--muted);margin:0 0 10px;font-style:italic}
 </style>
 </head>
 <body>
@@ -102,6 +105,15 @@
     <div class="banner demo" id="bDemo"></div>
     <div class="banner fail" id="bFail"></div>
     <div id="log"></div>
+
+    <div style="margin-top:14px;border-top:1px dashed var(--line);padding-top:12px">
+      <label class="field" for="clipUrl">🎬 Clip of the Day — paste a YouTube link (optional)</label>
+      <div class="inline">
+        <input type="text" id="clipUrl" placeholder="https://youtube.com/watch?v=…" style="flex:3" />
+        <input type="text" id="clipTs" placeholder="1:09:15" style="flex:1;min-width:90px" title="Timestamp where the clip starts (hh:mm:ss)" />
+      </div>
+      <p style="font-size:.8rem;color:var(--muted);margin:4px 0 0">Paste the YouTube URL and the timestamp where the good part starts — it embeds right below Public Comment of the Day.</p>
+    </div>
 
     <details>
       <summary>Advanced: paste a transcript yourself, or tune the source</summary>
@@ -374,6 +386,8 @@ async function generate(){
 $("btnGen").addEventListener("click",generate);
 
 function esc(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function tsToSecs(ts){if(!ts)return 0;const p=ts.trim().split(":").map(Number);if(p.length===3)return p[0]*3600+p[1]*60+p[2];if(p.length===2)return p[0]*60+p[1];return parseInt(ts)||0;}
+function parseClip(){const url=($("clipUrl")||{value:""}).value.trim();const ts=($("clipTs")||{value:""}).value.trim();if(!url)return null;const m=url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);if(!m)return null;const vid=m[1];let start=tsToSecs(ts);if(!start){const tm=url.match(/[?&]t=(\d+)/);if(tm)start=parseInt(tm[1]);}return{vid,start};}
 let lastMarkdown="";
 function render(nl,meeting,ranked){
   const md=newsletterMarkdown(nl);lastMarkdown=md;
@@ -386,6 +400,7 @@ function render(nl,meeting,ranked){
     <h4>🤔 Why It Matters</h4><p>${esc(nl.why_it_matters)}</p>
     <h4>🔤 Translation From Government</h4><p>${esc(nl.translation)}</p>
     <h4>🎤 Public Comment of the Day</h4><p>${esc(nl.public_comment_of_the_day)}</p>
+    ${(c=>c?`<div class="clip-wrap"><iframe src="https://www.youtube.com/embed/${c.vid}?start=${c.start}&rel=0" allowfullscreen loading="lazy"></iframe></div><p class="clip-label">▶ Cued to ${($("clipTs")||{value:""}).value||c.start+"s"} — watch the full meeting on <a href="https://youtube.com/watch?v=${c.vid}&t=${c.start}" target="_blank">YouTube</a></p>`:"")( parseClip())}
     <h4>🌴 LA Vibes</h4><p>${esc(nl.la_vibes)}</p>
     <h4>🔢 Numbers That Matter</h4><ul>${nl.numbers_that_matter.map(b=>"<li>"+esc(b)+"</li>").join("")}</ul>
     <h4>⏭️ What's Next</h4><p>${esc(nl.whats_next)}</p>
@@ -396,7 +411,7 @@ function render(nl,meeting,ranked){
   $("leader").innerHTML=ranked.length?ranked.map((c,i)=>`<div class="lead-row"><div class="badge" style="background:${colors[i%colors.length]}">${c.score.toFixed(2)}</div><div><div class="who">${esc(speakerLabel(c.speakerName))} ${i===0?"🏆":""}</div><div class="det">${esc(trimQuote(c.text,22))}</div><div>${c.topics.map(t=>'<span class="topic">'+t+'</span>').join("")}${c.agendaRefs.map(r=>'<span class="topic" style="background:#ffe9df;color:#c9560d">CF '+r+'</span>').join("")}</div></div></div>`).join(""):'<p class="hint">No public comments detected in this transcript.</p>';
   $("out").style.display="block";$("out").scrollIntoView({behavior:"smooth"});
 }
-function newsletterMarkdown(nl){return `**SUBJECT:** ${nl.subject}\n\n# 3 Mins Local\n\n_${nl.hook}_\n\n## What Actually Happened\n${nl.what_happened.map(b=>"- "+b).join("\n")}\n\n## The Big Story\n${nl.big_story}\n\n## Why It Matters\n${nl.why_it_matters}\n\n## Translation From Government\n${nl.translation}\n\n## Public Comment of the Day\n${nl.public_comment_of_the_day}\n\n## LA Vibes\n${nl.la_vibes}\n\n## Numbers That Matter\n${nl.numbers_that_matter.map(b=>"- "+b).join("\n")}\n\n## What's Next\n${nl.whats_next}\n\n---\n_${nl.closing}_`;}
+function newsletterMarkdown(nl){const c=parseClip();const clipMd=c?`\n\n▶ [Watch the clip](https://youtu.be/${c.vid}?t=${c.start})`:"";return `**SUBJECT:** ${nl.subject}\n\n# 3 Mins Local\n\n_${nl.hook}_\n\n## What Actually Happened\n${nl.what_happened.map(b=>"- "+b).join("\n")}\n\n## The Big Story\n${nl.big_story}\n\n## Why It Matters\n${nl.why_it_matters}\n\n## Translation From Government\n${nl.translation}\n\n## Public Comment of the Day\n${nl.public_comment_of_the_day}${clipMd}\n\n## LA Vibes\n${nl.la_vibes}\n\n## Numbers That Matter\n${nl.numbers_that_matter.map(b=>"- "+b).join("\n")}\n\n## What's Next\n${nl.whats_next}\n\n---\n_${nl.closing}_`;}
 $("btnCopy").addEventListener("click",()=>{navigator.clipboard.writeText(lastMarkdown).then(()=>{$("btnCopy").textContent="✓ Copied!";setTimeout(()=>$("btnCopy").textContent="📋 Copy as markdown",1500);});});
 $("btnPrint").addEventListener("click",()=>window.print());
 
