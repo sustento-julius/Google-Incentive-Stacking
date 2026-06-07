@@ -387,7 +387,7 @@ $("btnGen").addEventListener("click",generate);
 
 function esc(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 function tsToSecs(ts){if(!ts)return 0;const p=ts.trim().split(":").map(Number);if(p.length===3)return p[0]*3600+p[1]*60+p[2];if(p.length===2)return p[0]*60+p[1];return parseInt(ts)||0;}
-function parseClip(){const url=($("clipUrl")||{value:""}).value.trim();const ts=($("clipTs")||{value:""}).value.trim();if(!url)return null;const m=url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);if(!m)return null;const vid=m[1];let start=tsToSecs(ts);if(!start){const tm=url.match(/[?&]t=(\d+)/);if(tm)start=parseInt(tm[1]);}return{vid,start};}
+function parseClip(){const url=($("clipUrl")||{value:""}).value.trim();const ts=($("clipTs")||{value:""}).value.trim();if(!url)return null;const m=url.match(/(?:v=|youtu\.be\/|\/live\/)([A-Za-z0-9_-]{11})/);if(!m)return null;const vid=m[1];let start=tsToSecs(ts);if(!start){const tm=url.match(/[?&]t=(\d+)/);if(tm)start=parseInt(tm[1]);}return{vid,start};}
 let lastMarkdown="";
 function render(nl,meeting,ranked){
   const md=newsletterMarkdown(nl);lastMarkdown=md;
