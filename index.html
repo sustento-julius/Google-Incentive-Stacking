@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>3 Mins Local — Live Newsletter Generator</title>
+<style>
+  :root{
+    --ink:#1d1b2e; --muted:#5b5870; --line:#ece9f5; --paper:#fff; --wash:#faf7ff;
+    --sun:#ff7a45; --sun2:#ffb347; --grape:#6c4ad6; --sky:#2f9be0; --leaf:#1fae8b; --rose:#e8527a;
+    --shadow:0 12px 30px rgba(60,40,120,.10); --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--wash);line-height:1.6}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+  header.hero{background:linear-gradient(135deg,var(--grape),var(--sun) 65%,var(--sun2));color:#fff;padding:40px 0 46px}
+  .eyebrow{font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;opacity:.92}
+  header.hero h1{font-size:2.3rem;margin:.15em 0 .1em}
+  header.hero p{margin:0;font-size:1.1rem;opacity:.96;max-width:44ch}
+  main{padding:26px 0 60px}
+
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px;margin-bottom:20px}
+  .panel h2{margin:0 0 4px;font-size:1.15rem}
+  .panel p.hint{margin:0 0 14px;color:var(--muted);font-size:.95rem}
+
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  button{font:inherit;font-weight:700;border:none;border-radius:11px;padding:12px 18px;cursor:pointer;transition:transform .05s ease, box-shadow .15s ease}
+  button:active{transform:translateY(1px)}
+  .primary{background:linear-gradient(135deg,var(--grape),var(--sun));color:#fff;box-shadow:0 6px 16px rgba(108,74,214,.3)}
+  .ghost{background:#f1edfb;color:var(--grape)}
+  .small{padding:8px 13px;font-size:.86rem;border-radius:9px}
+
+  label.field{display:block;font-size:.85rem;font-weight:700;color:var(--muted);margin:12px 0 5px}
+  input[type=text],input[type=password],textarea,select{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+  textarea{min-height:150px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85rem;line-height:1.5}
+  .inline{display:flex;gap:10px;flex-wrap:wrap}
+  .inline > *{flex:1;min-width:160px}
+  .check{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:.92rem;color:var(--muted)}
+  .check input{width:auto}
+
+  details{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
+  summary{cursor:pointer;font-weight:700;color:var(--grape);font-size:.92rem}
+
+  #log{font-family:ui-monospace,Menlo,monospace;font-size:.8rem;background:#1d1b2e;color:#cfc7ee;border-radius:10px;padding:12px 14px;max-height:180px;overflow:auto;white-space:pre-wrap;margin-top:14px;display:none}
+  #log .ok{color:#7ee0b8}#log .warn{color:#ffcf7a}#log .err{color:#ff9a9a}#log .dim{color:#8a83b0}
+
+  .banner{border-radius:10px;padding:10px 14px;font-size:.9rem;margin-top:14px;display:none}
+  .banner.live{background:#e7f8f1;color:#0f7a5e;border:1px solid #b6ecd6}
+  .banner.demo{background:#fff5e6;color:#9a5b00;border:1px solid #ffe0a8}
+  .banner.fail{background:#fdecef;color:#b22a4d;border:1px solid #f6c2cf}
+
+  /* Newsletter */
+  #out{display:none}
+  .news{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
+  .news .top{background:linear-gradient(90deg,var(--grape),var(--sun));color:#fff;padding:14px 22px}
+  .news .top .sub{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+  .news .top h3{margin:2px 0 0;font-size:1.3rem}
+  .news .meta{padding:8px 22px;background:#faf7ff;color:var(--muted);font-size:.82rem;border-bottom:1px solid var(--line)}
+  .news .body{padding:18px 24px}
+  .news h4{margin:18px 0 5px;font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;color:var(--sun)}
+  .news h4:first-child{margin-top:0}
+  .news p{margin:0 0 6px}
+  .news ul{margin:4px 0 0;padding-left:20px}
+  .news .closing{color:var(--muted);font-style:italic;border-top:1px solid var(--line);margin-top:18px;padding-top:12px}
+  .wc{font-size:.8rem;color:var(--muted);text-align:right;margin-top:8px}
+
+  .leader{margin-top:20px}
+  .lead-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line)}
+  .lead-row:last-child{border-bottom:none}
+  .badge{flex:none;width:46px;text-align:center;font-weight:800;color:#fff;border-radius:9px;padding:6px 0;font-size:.85rem}
+  .lead-row .who{font-weight:700}
+  .lead-row .det{font-size:.82rem;color:var(--muted)}
+  .topic{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px;background:#f0ecfb;color:var(--grape);margin:2px 4px 0 0}
+  .copybar{display:flex;gap:10px;margin-top:14px}
+  footer{color:var(--muted);font-size:.84rem;text-align:center;padding:24px 0 40px}
+  a{color:var(--grape)}
+  .clip-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;margin:14px 0 6px}
+  .clip-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;border-radius:12px}
+  .clip-label{font-size:.78rem;color:var(--muted);margin:0 0 10px;font-style:italic}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <div class="eyebrow">Runs in your browser · nothing to install</div>
+  <h1>3 Mins Local</h1>
+  <p>Turn an LA City Council meeting into a witty, 3-minute newsletter — automatically.</p>
+</div></header>
+
+<main class="wrap">
+
+  <div class="panel">
+    <h2>1 · Get a meeting</h2>
+    <p class="hint">Click to pull the latest LA City Council meeting &amp; its CART transcript live (this happens in <b>your</b> browser, on your network). If the city's servers can't be reached, you'll instantly get a built-in sample meeting so you can still see it work.</p>
+    <div class="btnrow">
+      <button class="primary" id="btnLive">🔄 Fetch the latest LA City Council meeting</button>
+      <button class="ghost small" id="btnSample">▶︎ Use the built-in sample meeting</button>
+    </div>
+    <label class="field" for="meetUrl">…or paste a specific meeting / transcript link (most reliable — click a meeting on <a href="https://clerk.lacity.gov/calendar" target="_blank">clerk.lacity.gov/calendar</a> and copy its URL)</label>
+    <div class="inline">
+      <input type="text" id="meetUrl" placeholder="https://clerk.lacity.gov/…  or  https://lacity.primegov.com/Portal/Meeting?meetingTemplateId=…" style="flex:3" />
+      <button class="ghost" id="btnFromUrl" style="flex:1;min-width:130px">Fetch from link</button>
+    </div>
+    <button class="ghost small" id="btnDiag" style="margin-top:8px">🔧 Inspect source (debug — copy the log to me)</button>
+    <div class="banner live" id="bLive"></div>
+    <div class="banner demo" id="bDemo"></div>
+    <div class="banner fail" id="bFail"></div>
+    <div id="log"></div>
+
+    <div style="margin-top:14px;border-top:1px dashed var(--line);padding-top:12px">
+      <label class="field" for="clipUrl">🎬 Clip of the Day — paste a YouTube link (optional)</label>
+      <div class="inline">
+        <input type="text" id="clipUrl" placeholder="https://youtube.com/watch?v=…" style="flex:3" />
+        <input type="text" id="clipTs" placeholder="1:09:15" style="flex:1;min-width:90px" title="Timestamp where the clip starts (hh:mm:ss)" />
+      </div>
+      <p style="font-size:.8rem;color:var(--muted);margin:4px 0 0">Paste the YouTube URL and the timestamp where the good part starts — it embeds right below Public Comment of the Day.</p>
+    </div>
+
+    <details>
+      <summary>Advanced: paste a transcript yourself, or tune the source</summary>
+      <label class="field" for="meetTitle">Meeting title</label>
+      <input type="text" id="meetTitle" value="Regular Meeting of the Los Angeles City Council" />
+      <div class="inline">
+        <div><label class="field" for="meetDate">Date</label><input type="text" id="meetDate" placeholder="2025-12-10" /></div>
+        <div><label class="field" for="meetCmte">Body</label><input type="text" id="meetCmte" value="City Council" /></div>
+      </div>
+      <label class="field" for="transcript">CART transcript text</label>
+      <textarea id="transcript" placeholder="Paste a transcript here (only if you want to override the fetch)…"></textarea>
+    </details>
+  </div>
+
+  <div class="panel">
+    <h2>2 · Choose the writer</h2>
+    <p class="hint">The built-in writer always works, free, offline. Add a Google Gemini key for fresher, more human prose (optional). Your key stays in this page on your device — it is never uploaded anywhere except Google.</p>
+    <label class="check"><input type="checkbox" id="useAI" /> Use the Google Gemini AI writer</label>
+    <div id="aiBox" style="display:none">
+      <div class="inline">
+        <div style="flex:2"><label class="field" for="apiKey">Gemini API key</label><input type="password" id="apiKey" placeholder="AIza… or AQ.…" /></div>
+        <div><label class="field" for="model">Model</label><select id="model"><option>gemini-2.0-flash</option><option>gemini-1.5-flash</option><option>gemini-1.5-pro</option></select></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>3 · Generate</h2>
+    <div class="btnrow"><button class="primary" id="btnGen">✍️ Write the 3-minute newsletter</button></div>
+  </div>
+
+  <div id="out">
+    <div class="news" id="news"></div>
+    <div class="wc" id="wc"></div>
+    <div class="copybar">
+      <button class="ghost small" id="btnCopy">📋 Copy as markdown</button>
+      <button class="ghost small" id="btnPrint">🖨️ Print / Save PDF</button>
+    </div>
+    <div class="panel leader" id="leaderPanel" style="margin-top:20px">
+      <h2>🎤 Public comment leaderboard</h2>
+      <p class="hint">Every public comment, scored on newsworthiness, emotion, virality, and civic relevance. The top one becomes "Public Comment of the Day."</p>
+      <div id="leader"></div>
+    </div>
+  </div>
+
+  <footer>3 Mins Local · the fastest way to understand what actually happened at LA City Hall.</footer>
+</main>
+
+<script>
+'use strict';
+// =================== CONFIG / VOCAB ===================
+const TOPIC_KEYWORDS={housing:["housing","affordable","rent","tenant","eviction","landlord","rso","rent control"],homelessness:["homeless","unhoused","encampment","shelter","interim housing","41.18","skid row"],policing:["police","lapd","officer","public safety","crime","use of force","reform"],transportation:["transit","metro","bus","bike","bus lane","traffic","parking","vision zero","sidewalk"],olympics:["olympic","olympics","2028","la28","games"],corruption:["corruption","bribery","indictment","ethics","conflict of interest","fbi","fraud"],development:["development","zoning","rezoning","entitlement","project","permit","density","construction"],labor:["labor","union","wage","worker","minimum wage","strike","contract","collective bargaining"],climate:["climate","emissions","solar","ladwp","green","heat","tree","carbon","electrification"],budget:["budget","deficit","funding","appropriation","reserve","shortfall","fee"]};
+const INTENSITY_CUES=["applause","laughter","cheers","boos","shouting","gavel","out of order","point of order","interrupt","outrage","furious"];
+const PC_OPEN=["general public comment","public comment","multiple agenda item","please state your name","you have one minute","you'll have one minute","next speaker","next caller","caller, you're on the line","first speaker"];
+const PC_CLOSE=["your time has expired","time is up","thank you, next","that concludes public comment","closing public comment","we'll move on"];
+const COUNCIL_CUES=["councilmember","councilman","councilwoman","council member","president pro tem","council president","president","chair","vice chair","supervisor"];
+const STAFF_CUES=["city attorney","deputy city attorney","city administrative officer","cao","chief legislative analyst","cla","general manager","gm","director","deputy","analyst","staff","presenter","lapd chief","fire chief","department of","bureau of","sergeant at arms","engineer"];
+const CLERK_CUES=["city clerk","clerk","executive officer","reading clerk"];
+const PUBLIC_CUES=["speaker","caller","public comment","public testimony","member of the public"];
+const VIRALITY_MARKERS=["i pay your salary","do your job","this is insane","follow the money","you work for us","shame","literally","are you kidding","with all due respect","let me be clear","point blank","frankly","absurd","ridiculous"];
+const WEIGHTS={newsworthiness:.35,emotional:.20,virality:.20,civic_relevance:.25};
+const PHRASEBOOK={"mobility corridor optimization":"turning a car lane into a bus lane","mobility corridor":"a street they want buses and bikes to use","right-sizing":"cutting","fiscal sustainability":"we're short on money","structural deficit":"we spend more than we take in, every year","enhanced enforcement":"more tickets / more police","interim housing":"temporary shelter","permanent supportive housing":"apartments with on-site services for formerly homeless residents","adaptive reuse":"turning old offices into apartments","public-private partnership":"the city pays, a private company runs it","value capture":"taxing the bump in property value the city's own project creates","community engagement":"meetings where residents get to comment","stakeholder":"anyone affected","robust":"we hope it's big enough","leverage":"use","utilize":"use","incentivize":"pay people to","deconfliction":"stop two city plans from fighting each other","operationalize":"actually do","feasibility study":"we'll study whether it's even possible","ground lease":"the city keeps the land and rents it out long-term","entitlements":"permission to build","by-right":"no extra approvals needed","density bonus":"build taller in exchange for some affordable units","transit-oriented":"near a train or bus line","complete street":"a street redesigned for cars, buses, bikes, and walkers"};
+const WORDS_MAX=900;
+const COUNCIL_FILE_RE=/\b\d{2}-\d{4}(?:-S\d+)?\b/g;
+const ROLE={COUNCIL:"councilmember",STAFF:"staff",CLERK:"clerk",PUBLIC:"public",UNKNOWN:"unknown"};
+
+// =================== PIPELINE (ported & Node-tested) ===================
+function parseTimestamp(ts){if(!ts)return null;const p=ts.split(":").map(Number);let h,m,s;if(p.length===3)[h,m,s]=p;else if(p.length===2){h=0;[m,s]=p;}else return null;return h*3600+m*60+s;}
+function cleanSpeaker(r){return r.replace(/\s+/g," ").trim();}
+const GENERIC_LABELS=new Set(["speaker","caller","public comment","member of the public","next speaker"]);
+function displayName(raw){const l=cleanSpeaker(raw);const m=l.match(/^([A-Za-z .'-]+?)\s*\(([^)]+)\)\s*$/);if(m&&GENERIC_LABELS.has(m[1].trim().toLowerCase()))return m[2].trim();return l;}
+function looksLikeLabel(c){const w=c.split(/\s+/);if(w.length>6)return false;const L=[...c].filter(ch=>/[a-zA-Z]/.test(ch));if(!L.length)return false;const up=L.filter(ch=>ch===ch.toUpperCase()&&/[A-Z]/.test(ch)).length;return up/L.length>=.5;}
+const RE_MARK=/^\s*>>\s*([^:\[]+?)\s*(?:\[(\d{1,2}:\d{2}(?::\d{2})?)\])?\s*:\s*(.*)$/,RE_TS=/^\s*\[(\d{1,2}:\d{2}(?::\d{2})?)\]\s*([A-Z][^:]{1,60}?)\s*:\s*(.*)$/,RE_PLAIN=/^\s*([A-Z][A-Za-z'.\-() ]{1,58}?)\s*:\s*(.+)$/;
+function parseTranscript(text){const segs=[];let cur=null;for(const line of text.split(/\r?\n/)){if(!line.trim())continue;let sp=null,ts=null,body=null,m;if((m=line.match(RE_MARK))){sp=m[1];ts=m[2];body=m[3];}else if((m=line.match(RE_TS))){ts=m[1];sp=m[2];body=m[3];}else if((m=line.match(RE_PLAIN))&&looksLikeLabel(m[1])){sp=m[1];body=m[2];}if(sp!==null){if(cur){cur.text=cur.text.trim();segs.push(cur);}cur={index:segs.length,speakerRaw:">> "+cleanSpeaker(sp),speakerName:displayName(sp),text:body.trim(),start:parseTimestamp(ts),role:ROLE.UNKNOWN};}else if(cur){cur.text=(cur.text+" "+line.trim()).trim();}}if(cur){cur.text=cur.text.trim();segs.push(cur);}return segs;}
+function classifyLabel(label){const l=label.toLowerCase().replace(/^>+/,"").trim();if(CLERK_CUES.some(c=>l.includes(c)))return ROLE.CLERK;if(COUNCIL_CUES.some(c=>l.includes(c)))return ROLE.COUNCIL;if(STAFF_CUES.some(c=>l.includes(c)))return ROLE.STAFF;if(PUBLIC_CUES.some(c=>l.includes(c)))return ROLE.PUBLIC;return ROLE.UNKNOWN;}
+function classifySegments(segs){for(const s of segs)s.role=classifyLabel(s.speakerRaw||s.speakerName);return segs;}
+function hasCue(t,cues){const low=t.toLowerCase();return cues.some(c=>low.includes(c));}
+function detectWindows(segs){const w=[];let open=null;segs.forEach((s,i)=>{if(open===null){if(hasCue(s.text,PC_OPEN))open=i;}else if(hasCue(s.text,PC_CLOSE)){w.push([open,i+1]);open=null;}});if(open!==null)w.push([open,segs.length]);return w;}
+function inWindow(i,wins){return wins.some(([a,b])=>a<=i&&i<b);}
+function extractPublicComments(segs){const wins=detectWindows(segs);const out=[];segs.forEach((s,i)=>{const off=[ROLE.COUNCIL,ROLE.STAFF,ROLE.CLERK].includes(s.role);if(s.role===ROLE.PUBLIC){out.push(s);return;}if(inWindow(i,wins)&&!off){s.role=ROLE.PUBLIC;out.push(s);}});return out.filter(s=>s.text.split(/\s+/).length>=4);}
+function topicsIn(t){const low=t.toLowerCase();return Object.entries(TOPIC_KEYWORDS).filter(([k,kw])=>kw.some(x=>low.includes(x))).map(([k])=>k);}
+function newsworthiness(tp){if(!tp.length)return 0;return Math.min(1,.45+.275*(tp.length-1));}
+function emotional(t){const low=t.toLowerCase();const h=INTENSITY_CUES.filter(c=>low.includes(c)).length;const ex=Math.min((t.match(/!/g)||[]).length,3)*.15;const caps=Math.min((t.match(/\b[A-Z]{3,}\b/g)||[]).length,4)*.1;return Math.min(1,.4*h+ex+caps);}
+function virality(t){const low=t.toLowerCase();const mk=VIRALITY_MARKERS.filter(m=>low.includes(m)).length;let s=Math.min(1,.35*mk);const wc=t.split(/\s+/).length;if(wc>=8&&wc<=45)s+=.2;return Math.min(1,s);}
+function civic(t,files,tps){const low=t.toLowerCase();const found=(t.match(COUNCIL_FILE_RE)||[]);let refs=files&&files.size?[...new Set(found)].filter(f=>files.has(f)):[...new Set(found)];let s=0;if(refs.length)s+=Math.min(.7,.4+.15*(refs.length-1));if(["vote","motion","agenda item","item number","council file","ordinance"].some(p=>low.includes(p)))s+=.3;if(tps&&tps.size&&topicsIn(t).some(x=>tps.has(x)))s+=.2;return[Math.min(1,s),refs.sort()];}
+const rnd=(n,d=3)=>{const f=10**d;return Math.round(n*f)/f;};
+function scoreComment(seg,files,tps){const topics=topicsIn(seg.text);const[civ,refs]=civic(seg.text,files,tps);const bd={newsworthiness:rnd(newsworthiness(topics)),emotional:rnd(emotional(seg.text)),virality:rnd(virality(seg.text)),civic_relevance:rnd(civ)};const total=rnd(Object.keys(WEIGHTS).reduce((a,k)=>a+WEIGHTS[k]*bd[k],0),4);return{speakerName:seg.speakerName,text:seg.text,topics,agendaRefs:refs,score:total,breakdown:bd};}
+function rankComments(pub,items){items=items||[];const files=new Set(items.map(i=>i.item_id));const tps=new Set();items.forEach(i=>(i.topics||[]).forEach(t=>tps.add(t)));return pub.map(s=>scoreComment(s,files,tps)).sort((a,b)=>b.score-a.score);}
+function extractAgendaFromTranscript(segs){const items=[];let cur=null;const fin=()=>{if(cur)items.push(cur);};for(const s of segs){const m=s.role===ROLE.CLERK?s.text.match(/^Item\s+(\d{2}-\d{4}(?:-S\d+)?)\.?\s*(.*)$/i):null;if(m){fin();const rest=m[2].trim();const title=rest.split(/(?<=[.!?])\s+/)[0]||rest;cur={item_id:m[1],title:title.replace(/\.$/,""),description:rest,item_type:"",action:"",vote:""};continue;}if(cur){const t=s.text,low=t.toLowerCase();const v=t.match(/(\d{1,2})\s+to\s+(\d{1,2})/);if(v&&!cur.vote)cur.vote=v[1]+"-"+v[2];if(!cur.action){if(/\b(adopted|carries|approved|passes)\b/.test(low))cur.action="adopted";else if(/\bcontinued\b/.test(low))cur.action=(t.match(/continued[^.]*?weeks?/i)||["continued"])[0];else if(/\brefer/.test(low))cur.action="referred to committee";else if(/received and filed/.test(low))cur.action="received and filed";}}}fin();return items;}
+function actionPhrase(it){const act=(it.action||"").toLowerCase(),base=(it.title||"").replace(/\.$/,""),vote=it.vote?" on a "+it.vote+" vote":"";if(/adopt|approv|carries|passes/.test(act))return`approved “${base}”${vote}`;if(/continu|defer/.test(act))return`punted “${base}” to a later date${vote}`;if(/refer/.test(act))return`sent “${base}” back to committee${vote}`;if(/receiv/.test(act))return`received-and-filed “${base}” (i.e. noted it and moved on)`;return`considered “${base}”${vote}`;}
+function whyTemplate(it){return it.topics&&it.topics.length?`It lands squarely in LA's ${it.topics[0]} fight — the kind of decision residents actually feel.`:"It's the sort of routine-sounding item that quietly reshapes how the city runs.";}
+function nextTemplate(it){const a=(it.action||"").toLowerCase();if(/continu|defer/.test(a))return"Expect it back on a future agenda — watch the council file for the new date.";if(/committee|refer/.test(a))return"It heads to committee next, where the real horse-trading happens.";if(/adopt|approv|carries/.test(a))return"Now it moves to implementation; the mayor and departments take it from here.";return"Track the council file for the next move.";}
+function translate(it){const text=`${it.title}. ${it.description}`.trim(),low=text.toLowerCase();for(const[j,p]of Object.entries(PHRASEBOOK)){if(low.includes(j))return`“${j}” = ${p}.`;}const cl=text.replace(/\b(pursuant to|whereas|heretofore|aforementioned|notwithstanding)\b/gi,"").trim();const sh=cl.split(".")[0];return sh?`In plain English: ${sh}.`:"In plain English: the city did a city thing.";}
+function processAgenda(items){for(const it of items){it.topics=topicsIn(`${it.title} ${it.description}`);it.what_happened=`Council ${actionPhrase(it)} (CF ${it.item_id}).`;it.why_it_matters=whyTemplate(it);it.what_next=nextTemplate(it);it.translation=translate(it);}return items;}
+const MONEY_RE=/\$[\d,]+(?:\.\d+)?(?:\s?(?:million|billion|m|b|k))?/gi,VOTE_FULL=/^\d{1,2}-\d{1,2}$/;
+function subjectify(t){const w=(t||"").replace(/\.$/,"").split(/\s+/),sh=w.slice(0,8).join(" ");return w.length<=8?sh:sh+"…";}
+function firstSentence(t){t=(t||"").trim();if(!t)return"";return t.split(/(?<=[.!?])\s+/)[0].trim();}
+function trimQuote(t,max=40){const w=t.split(/\s+/);return w.length<=max?t:w.slice(0,max).join(" ")+"…";}
+function speakerLabel(n){n=(n||"").trim();if(!n||["speaker","caller","public comment"].includes(n.toLowerCase()))return"one Angeleno";return n;}
+function pcWhy(c){return c.topics&&c.topics.length?`It cut to the heart of LA's ${c.topics[0]} debate.`:"It was the kind of comment that makes the room go quiet.";}
+function vibes(items,c){const tp=new Set();items.forEach(a=>(a.topics||[]).forEach(t=>tp.add(t)));if(c)(c.topics||[]).forEach(t=>tp.add(t));if(tp.has("homelessness")||tp.has("housing"))return"Housing dominated the room again — the chamber's most reliable recurring character.";if(tp.has("transportation"))return"Transit talk meant the usual bus-lane-versus-parking standoff. Classic LA.";if(tp.has("olympics"))return"The 2028 clock ticked a little louder in the background today.";return"A workmanlike day in the horseshoe — gavel, motion, vote, repeat.";}
+function extractNumbers(items){const out=[],seen=new Set();for(const a of items){const blob=`${a.title} ${a.description} ${a.what_happened}`;for(const m of(blob.match(MONEY_RE)||[])){if(!seen.has(m)){seen.add(m);out.push(`${m} — tied to ${subjectify(a.title)}`);}}if(a.vote&&!seen.has(a.vote)&&VOTE_FULL.test(a.vote)){seen.add(a.vote);out.push(`${a.vote} — the vote on ${subjectify(a.title)}`);}if(out.length>=4)break;}return out.slice(0,4);}
+function wordCount(nl){const p=[nl.hook,nl.big_story,nl.why_it_matters,nl.translation,nl.public_comment_of_the_day,nl.la_vibes,nl.whats_next,nl.closing,...nl.what_happened,...nl.numbers_that_matter];return p.reduce((a,x)=>a+(x?x.split(/\s+/).length:0),0);}
+function enforceBudget(nl){const f=["big_story","public_comment_of_the_day","why_it_matters","la_vibes","whats_next"];while(wordCount(nl)>WORDS_MAX){let lg=f[0];for(const x of f)if(nl[x].split(/\s+/).length>nl[lg].split(/\s+/).length)lg=x;const w=nl[lg].split(/\s+/);if(w.length<=12)break;nl[lg]=w.slice(0,Math.floor(w.length*.8)).join(" ").replace(/[,;]$/,"")+"…";}return nl;}
+function generateNewsletter(meeting,items,comment){const committee=meeting.committee||"City Council",top=items[0];let subject,big,translation;if(top){subject=subjectify(top.title);big=`${top.what_happened} ${firstSentence(top.description)}`.trim();translation=top.translation;}else{subject=`What went down at ${committee}`;big="A quieter day at City Hall — mostly procedural items and reports.";translation="Nothing that needs a decoder ring today.";}const hook=`Good morning, LA. The ${committee} met ${meeting.date?("on "+meeting.date):"this week"}, so you didn't have to. Here's the 3-minute version.`;let what=items.slice(0,5).map(a=>a.what_happened);if(!what.length)what=["Council worked through a light, procedural agenda."];const why=top?top.why_it_matters:"Even the boring stuff sets the table for the fights to come.";let pc;if(comment){const ref=comment.agendaRefs&&comment.agendaRefs.length?` (re: CF ${comment.agendaRefs[0]})`:"";pc=`During public comment${ref}, ${speakerLabel(comment.speakerName)} said: “${trimQuote(comment.text)}” ${pcWhy(comment)}`;}else{pc="No standout public comment today — a rare quiet mic at City Hall.";}const nl={meeting_id:meeting.id,subject,hook,what_happened:what,big_story:big,why_it_matters:why,translation,public_comment_of_the_day:pc,la_vibes:vibes(items,comment),numbers_that_matter:extractNumbers(items).length?extractNumbers(items):["No headline numbers today — keep the receipts handy anyway."],whats_next:top?top.what_next:"Check the council calendar for the next meeting.",closing:"That's your 3 minutes. Now go outside — it's LA, the weather's doing its thing. 🌴"};return enforceBudget(nl);}
+
+// =================== SAMPLE DATA (offline fallback) ===================
+const SAMPLE_TRANSCRIPT=`>> CITY CLERK [10:02:11]: Good morning. This is the regular meeting of the Los Angeles City Council for Thursday, May 28th, 2026. Roll call. We have a quorum present.
+>> COUNCIL PRESIDENT HARRIS-DAWSON [10:04:33]: Thank you. Good morning, everyone. Before we take up the agenda, we'll begin with general public comment on items on today's agenda. Each speaker will have one minute. Please state your name for the record when the clerk calls you. First speaker.
+>> SPEAKER (MARIA GONZALEZ) [10:05:01]: Good morning, council. My name is Maria Gonzalez and I rent in Boyle Heights. I'm here about council file 24-0455, the tenant anti-harassment ordinance. My landlord shut off the hot water for three weeks to push us out. This ordinance is the only thing standing between working families and an empty apartment a developer can flip. Please vote yes. We are not numbers, we are your neighbors.
+>> CITY CLERK [10:06:09]: Next speaker.
+>> SPEAKER (DARNELL WRIGHT) [10:06:14]: Darnell Wright, Council District 9. I run a small auto shop on Central. I support housing, but every time you add a fee, you add it to my rent too. On item 23-1102, the mobility corridor project, you're taking away the parking my customers use. With all due respect, follow the money on who actually asked for this. It wasn't us.
+>> COUNCIL PRESIDENT HARRIS-DAWSON [10:07:20]: Thank you. Next.
+>> SPEAKER (REVEREND ALMA TORRES) [10:07:25]: Reverend Alma Torres, from a coalition of Westlake congregations. Item 24-0600-S29 funds 200 interim housing beds. Two hundred beds for forty thousand unhoused neighbors. I have buried members of my congregation on the sidewalk. Two hundred is not a plan, it is a press release. Do better. [applause]
+>> COUNCIL PRESIDENT HARRIS-DAWSON [10:08:40]: I'll ask the audience to please hold applause so we can get through every speaker. Next.
+>> SPEAKER (KEVIN) [10:08:52]: Kevin, San Pedro. I just want to know why the agenda PDF is 1,400 pages and the summary is one sentence. I have a job. I have one minute to talk about something you had three weeks to read. That's the whole problem with this place. Your time has expired before you even understand the item.
+>> CITY CLERK [10:09:48]: Your time has expired. That concludes general public comment.
+>> COUNCIL PRESIDENT HARRIS-DAWSON [10:10:02]: Thank you to everyone who came down. We'll move on to the agenda. Madam Clerk, please read item 24-0455.
+>> CITY CLERK [10:10:20]: Item 24-0455. Ordinance amending the Los Angeles Municipal Code to establish a tenant anti-harassment program with administrative penalties.
+>> COUNCILMEMBER SOTO-MARTINEZ [10:10:45]: Thank you, Mr. President. This has been two years of stakeholder engagement. The translation here is simple: if a landlord cuts your water to force you out, the city can finally fine them. I move to adopt.
+>> CITY ATTORNEY RODRIGUEZ [10:11:30]: For the record, the ordinance as drafted is legally sufficient and the administrative penalty structure is enforceable.
+>> COUNCIL PRESIDENT HARRIS-DAWSON [10:12:05]: All in favor. The motion is adopted, 12 to 0. Next item, 23-1102.
+>> CITY CLERK [10:12:30]: Item 23-1102. Mobility corridor optimization project on Central Avenue, including a dedicated bus lane and protected bike lane between Vernon and Slauson.
+>> COUNCILMEMBER PRICE [10:13:10]: I appreciate the goal, but my constituents like Mr. Wright deserve a real parking mitigation plan. I move we continue this item two weeks for a feasibility study on loading zones.
+>> COUNCIL PRESIDENT HARRIS-DAWSON [10:14:25]: Without objection, item 23-1102 is continued two weeks. Next, 24-0600-S29.
+>> CITY CLERK [10:14:50]: Item 24-0600-S29. Authorization to allocate 12 million dollars in Homeless Housing, Assistance and Prevention funds for 200 interim housing beds in Council Districts 1 and 14.
+>> COUNCILMEMBER HERNANDEZ [10:15:30]: I'll be honest, the reverend is right that it's not enough. But 12 million dollars and 200 beds today beats a perfect plan that never funds anything. I move to adopt.
+>> COUNCIL PRESIDENT HARRIS-DAWSON [10:16:40]: The motion carries, 11 to 1. We'll recess for ten minutes.`;
+
+// =================== DOM + ORCHESTRATION ===================
+const $=id=>document.getElementById(id);
+const logEl=$("log");
+function log(msg,cls){logEl.style.display="block";const s=document.createElement("div");if(cls)s.className=cls;s.textContent=msg;logEl.appendChild(s);logEl.scrollTop=logEl.scrollHeight;}
+function clearLog(){logEl.innerHTML="";logEl.style.display="none";}
+function banner(id,msg){["bLive","bDemo","bFail"].forEach(b=>$(b).style.display="none");const el=$(id);el.textContent=msg;el.style.display="block";}
+
+$("useAI").addEventListener("change",e=>{$("aiBox").style.display=e.target.checked?"block":"none";});
+
+// ---- CORS-proxied fetch (runs in the user's browser, on their network) ----
+const PROXIES=[u=>"https://corsproxy.io/?url="+encodeURIComponent(u),u=>"https://api.allorigins.win/raw?url="+encodeURIComponent(u),u=>u];
+async function proxiedFetch(url,asJson){let lastErr;for(const wrap of PROXIES){const via=wrap(url);try{log("  → "+via.slice(0,72),"dim");const r=await fetch(via,{headers:{Accept:asJson?"application/json,*/*":"text/html,*/*"}});if(!r.ok){lastErr=new Error("HTTP "+r.status);log("    HTTP "+r.status,"warn");continue;}const txt=await r.text();if(txt&&txt.length>30){return asJson?JSON.parse(txt):txt;}lastErr=new Error("empty body");}catch(e){lastErr=e;log("    "+e.message,"warn");}}throw lastErr||new Error("all strategies failed");}
+
+function looksLikeTranscript(text){
+  return text && text.split(/\s+/).length>200 && (/(^|\n)\s*>>/.test(text) || /\[\d{1,2}:\d{2}(?::\d{2})?\]/.test(text) || /next speaker|public comment|state your name/i.test(text));
+}
+function absolutize(href,base){ try{ return new URL(href, base).href; }catch(e){ return href; } }
+
+// Dump what we actually received so it can be pasted back to debug the parser.
+function dumpDiag(label,body,base){
+  log("──── DIAGNOSTIC ("+label+") — copy everything below to your developer ────","warn");
+  log("bytes: "+body.length,"dim");
+  const links=[...body.matchAll(/href=["']([^"']+)["']/gi)].map(m=>m[1]);
+  log("links found: "+links.length,"dim");
+  const interesting=[...new Set(links.filter(h=>/transcript|cart|agenda|meeting|document|\.txt|\.pdf|primegov|\.htm/i.test(h)))];
+  log("candidate links ("+interesting.length+"):","dim");
+  interesting.slice(0,30).forEach(h=>log("   "+absolutize(h,base||location.href),"dim"));
+  // embedded JSON blobs (SPAs)
+  const json=body.match(/<script[^>]*application\/json[^>]*>([\s\S]{0,400})/i);
+  if(json) log("embedded JSON (first 400): "+json[1],"dim");
+  log("first 1800 chars of body:","dim");
+  log(body.slice(0,1800),"dim");
+  log("──── END DIAGNOSTIC ────","warn");
+}
+
+// Fetch a transcript from a specific meeting / transcript URL (most reliable).
+async function fetchFromUrl(url){
+  clearLog();log("Fetching "+url+" (via your browser)…");
+  const body=await proxiedFetch(url,false);
+  const text=stripHtml(body);
+  if(looksLikeTranscript(text)){ log("That page is itself a transcript ("+text.length+" chars).","ok"); return {transcript:text,meeting:{id:"url",title:"Los Angeles City Council",date:"",committee:"City Council"},source:url}; }
+  // Otherwise follow transcript-ish links on the page.
+  const links=[...new Set([...body.matchAll(/href=["']([^"']+)["']/gi)].map(m=>m[1]))];
+  const cand=links.filter(h=>/transcript|cart|\.txt/i.test(h));
+  log("page wasn't a transcript; trying "+cand.length+" candidate link(s)…");
+  for(let h of cand){ const u=absolutize(h,url); try{ const t=stripHtml(await proxiedFetch(u,false)); if(looksLikeTranscript(t)){ log("Got transcript from "+u,"ok"); return {transcript:t,meeting:{id:"url",title:"Los Angeles City Council",date:"",committee:"City Council"},source:u}; } }catch(e){ log("   "+u+" → "+e.message,"warn"); } }
+  dumpDiag("meeting page", body, url);
+  throw new Error("Couldn't find a transcript at that link — see diagnostic above.");
+}
+
+// Best-effort auto retrieval starting from the public calendar.
+async function fetchLatestMeeting(){
+  clearLog();log("Fetching latest LA City Council meeting (in your browser)…");
+  log("Loading the City Clerk calendar…");
+  const html=await proxiedFetch("https://clerk.lacity.gov/calendar",false);
+  // direct transcript link?
+  let m=html.match(/href=["']([^"']*(?:transcript|cart)[^"']*)["']/i);
+  if(m){ const u=absolutize(m[1],"https://clerk.lacity.gov/calendar"); log("Found a transcript link: "+u,"ok"); const t=stripHtml(await proxiedFetch(u,false)); if(looksLikeTranscript(t)) return {transcript:t,meeting:{id:"clerk-latest",title:"Los Angeles City Council",date:"",committee:"City Council"},source:"City Clerk"}; }
+  // else follow the first council meeting link and look there
+  const links=[...new Set([...html.matchAll(/href=["']([^"']+)["']/gi)].map(x=>x[1]))];
+  const meetingLinks=links.filter(h=>/meeting|agenda|primegov|council/i.test(h)).slice(0,4);
+  log("No direct transcript link; probing "+meetingLinks.length+" meeting link(s)…");
+  for(let h of meetingLinks){ const u=absolutize(h,"https://clerk.lacity.gov/calendar"); try{ const r=await fetchFromUrl(u); return r; }catch(e){} }
+  dumpDiag("calendar page", html, "https://clerk.lacity.gov/calendar");
+  throw new Error("Could not auto-locate a transcript — see diagnostic above.");
+}
+function stripHtml(s){if(!/[<][a-z!]/i.test(s))return s;const d=document.createElement("div");d.innerHTML=s;return (d.textContent||d.innerText||"").replace(/\n{3,}/g,"\n\n");}
+
+function loadSample(){
+  $("transcript").value=SAMPLE_TRANSCRIPT;$("meetTitle").value="Regular Meeting of the Los Angeles City Council";$("meetDate").value="2026-05-28";$("meetCmte").value="City Council";
+  banner("bDemo","Loaded the built-in sample council meeting (May 28, 2026). This is demo data so you can see the full pipeline — including Public Comment of the Day. Click “Write the newsletter” below.");
+}
+
+$("btnSample").addEventListener("click",loadSample);
+
+function applyResult(res){
+  $("transcript").value=res.transcript;
+  $("meetTitle").value=res.meeting.title||$("meetTitle").value;
+  $("meetDate").value=res.meeting.date||$("meetDate").value;
+  $("meetCmte").value=res.meeting.committee||$("meetCmte").value;
+  banner("bLive","✅ Pulled a live transcript ("+res.transcript.length+" chars). Now click “✍️ Write the 3-minute newsletter” below.");
+  log("Success — transcript loaded.","ok");
+}
+async function runFetch(fn,btn,busyText,idleText){
+  btn.disabled=true;const old=btn.textContent;btn.textContent=busyText;
+  try{ applyResult(await fn()); }
+  catch(e){
+    log("Failed: "+e.message,"err");
+    loadSample();
+    banner("bFail","Couldn't pull that automatically. I loaded the built-in sample so you can still see it work. Tip: paste a specific meeting link above and hit “Fetch from link”, or click “🔧 Inspect source”, then copy the whole dark log box and send it to me — I'll wire up the exact parser from what your browser sees.");
+  }finally{ btn.disabled=false;btn.textContent=idleText; }
+}
+$("btnLive").addEventListener("click",()=>runFetch(fetchLatestMeeting,$("btnLive"),"⏳ Fetching…","🔄 Fetch the latest LA City Council meeting"));
+$("btnFromUrl").addEventListener("click",()=>{
+  const u=$("meetUrl").value.trim();
+  if(!u){banner("bFail","Paste a meeting or transcript link first.");return;}
+  runFetch(()=>fetchFromUrl(u),$("btnFromUrl"),"⏳…","Fetch from link");
+});
+$("btnDiag").addEventListener("click",async()=>{
+  clearLog();const u=$("meetUrl").value.trim()||"https://clerk.lacity.gov/calendar";
+  log("Inspecting "+u+" …");
+  try{ const body=await proxiedFetch(u,false); dumpDiag("manual inspect",body,u); log("Done — copy the whole box above and send it to your developer.","ok"); }
+  catch(e){ log("Inspect failed: "+e.message,"err"); }
+});
+
+async function callGemini(system,prompt,key,model){
+  const url="https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent?key="+encodeURIComponent(key);
+  const body={contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.85,responseMimeType:"application/json"}};
+  if(system)body.systemInstruction={parts:[{text:system}]};
+  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(!r.ok)throw new Error("Gemini HTTP "+r.status+" — "+(await r.text()).slice(0,200));
+  const j=await r.json();const txt=(j.candidates&&j.candidates[0]&&j.candidates[0].content.parts.map(p=>p.text).join(""))||"";return txt;
+}
+const NEWS_SYS=`You are the writer of "3 Mins Local," a daily LA City Hall newsletter. Voice: smart, funny, slightly sarcastic, civic-minded. Never partisan, activist, corporate, or like a government press release. Never mock ordinary residents; humor targets bureaucracy and meeting dynamics. Stay factual — do not invent votes, names, or quotes. Target 500-700 words.`;
+function buildNewsPrompt(meeting,items,top){
+  const ab=items.slice(0,5).map(a=>`- CF ${a.item_id}: ${a.title}\n  what happened: ${a.what_happened}\n  why: ${a.why_it_matters}\n  next: ${a.what_next}\n  translation: ${a.translation}`).join("\n")||"(none)";
+  return `MEETING: ${meeting.title} (${meeting.committee}) — ${meeting.date}\nTOP AGENDA ITEMS:\n${ab}\nPUBLIC COMMENT OF THE DAY (use as-is): ${top?top.speakerName+': "'+top.text+'"':"(none)"}\n\nReturn STRICT JSON with keys: subject, hook, what_happened (array of 3-5), big_story, why_it_matters, translation, public_comment_of_the_day, la_vibes, numbers_that_matter (array of 2-4), whats_next, closing.`;
+}
+
+async function generate(){
+  const transcript=$("transcript").value.trim();
+  if(!transcript){banner("bFail","No meeting loaded yet. Click “Fetch the latest” or “Use the built-in sample” first.");return;}
+  const meeting={id:"web",title:$("meetTitle").value||"Los Angeles City Council",date:$("meetDate").value||"",committee:$("meetCmte").value||"City Council"};
+  const segs=classifySegments(parseTranscript(transcript));
+  const pub=extractPublicComments(segs);
+  let items=processAgenda(extractAgendaFromTranscript(segs));
+  const ranked=rankComments(pub,items);
+  let nl=generateNewsletter(meeting,items,ranked[0]||null);
+
+  if($("useAI").checked && $("apiKey").value.trim()){
+    try{
+      log("Calling Gemini…");
+      const raw=await callGemini(NEWS_SYS,buildNewsPrompt(meeting,items,ranked[0]),$("apiKey").value.trim(),$("model").value);
+      const data=JSON.parse(raw.replace(/^```json\s*|```$/g,""));
+      nl=enforceBudget(Object.assign(nl,{subject:data.subject,hook:data.hook,what_happened:data.what_happened.slice(0,5),big_story:data.big_story,why_it_matters:data.why_it_matters,translation:data.translation,public_comment_of_the_day:data.public_comment_of_the_day,la_vibes:data.la_vibes,numbers_that_matter:data.numbers_that_matter.slice(0,4),whats_next:data.whats_next,closing:data.closing}));
+      log("Gemini wrote the issue.","ok");
+    }catch(e){log("Gemini failed ("+e.message+") — used the built-in writer instead.","warn");}
+  }
+  render(nl,meeting,ranked);
+}
+$("btnGen").addEventListener("click",generate);
+
+function esc(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function tsToSecs(ts){if(!ts)return 0;const p=ts.trim().split(":").map(Number);if(p.length===3)return p[0]*3600+p[1]*60+p[2];if(p.length===2)return p[0]*60+p[1];return parseInt(ts)||0;}
+function parseClip(){const url=($("clipUrl")||{value:""}).value.trim();const ts=($("clipTs")||{value:""}).value.trim();if(!url)return null;const m=url.match(/(?:v=|youtu\.be\/|\/live\/)([A-Za-z0-9_-]{11})/);if(!m)return null;const vid=m[1];let start=tsToSecs(ts);if(!start){const tm=url.match(/[?&]t=(\d+)/);if(tm)start=parseInt(tm[1]);}return{vid,start};}
+let lastMarkdown="";
+function render(nl,meeting,ranked){
+  const md=newsletterMarkdown(nl);lastMarkdown=md;
+  $("news").innerHTML=`<div class="top"><div class="sub">SUBJECT</div><h3>${esc(nl.subject)}</h3></div>
+  <div class="meta">${esc(meeting.title)} · ${esc(meeting.committee)} ${meeting.date?("· "+esc(meeting.date)):""}</div>
+  <div class="body">
+    <p style="color:var(--muted);font-style:italic">${esc(nl.hook)}</p>
+    <h4>📋 What Actually Happened</h4><ul>${nl.what_happened.map(b=>"<li>"+esc(b)+"</li>").join("")}</ul>
+    <h4>🏛️ The Big Story</h4><p>${esc(nl.big_story)}</p>
+    <h4>🤔 Why It Matters</h4><p>${esc(nl.why_it_matters)}</p>
+    <h4>🔤 Translation From Government</h4><p>${esc(nl.translation)}</p>
+    <h4>🎤 Public Comment of the Day</h4><p>${esc(nl.public_comment_of_the_day)}</p>
+    ${(c=>c?`<div class="clip-wrap"><iframe src="https://www.youtube.com/embed/${c.vid}?start=${c.start}&rel=0" allowfullscreen loading="lazy"></iframe></div><p class="clip-label">▶ Cued to ${($("clipTs")||{value:""}).value||c.start+"s"} — watch the full meeting on <a href="https://youtube.com/watch?v=${c.vid}&t=${c.start}" target="_blank">YouTube</a></p>`:"")( parseClip())}
+    <h4>🌴 LA Vibes</h4><p>${esc(nl.la_vibes)}</p>
+    <h4>🔢 Numbers That Matter</h4><ul>${nl.numbers_that_matter.map(b=>"<li>"+esc(b)+"</li>").join("")}</ul>
+    <h4>⏭️ What's Next</h4><p>${esc(nl.whats_next)}</p>
+    <p class="closing">${esc(nl.closing)}</p>
+  </div>`;
+  $("wc").textContent=wordCount(nl)+" words · ~"+Math.max(1,Math.round(wordCount(nl)/200))+" min read · target 500–700";
+  const colors=["var(--rose)","var(--grape)","var(--sky)","var(--leaf)","var(--sun2)"];
+  $("leader").innerHTML=ranked.length?ranked.map((c,i)=>`<div class="lead-row"><div class="badge" style="background:${colors[i%colors.length]}">${c.score.toFixed(2)}</div><div><div class="who">${esc(speakerLabel(c.speakerName))} ${i===0?"🏆":""}</div><div class="det">${esc(trimQuote(c.text,22))}</div><div>${c.topics.map(t=>'<span class="topic">'+t+'</span>').join("")}${c.agendaRefs.map(r=>'<span class="topic" style="background:#ffe9df;color:#c9560d">CF '+r+'</span>').join("")}</div></div></div>`).join(""):'<p class="hint">No public comments detected in this transcript.</p>';
+  $("out").style.display="block";$("out").scrollIntoView({behavior:"smooth"});
+}
+function newsletterMarkdown(nl){const c=parseClip();const clipMd=c?`\n\n▶ [Watch the clip](https://youtu.be/${c.vid}?t=${c.start})`:"";return `**SUBJECT:** ${nl.subject}\n\n# 3 Mins Local\n\n_${nl.hook}_\n\n## What Actually Happened\n${nl.what_happened.map(b=>"- "+b).join("\n")}\n\n## The Big Story\n${nl.big_story}\n\n## Why It Matters\n${nl.why_it_matters}\n\n## Translation From Government\n${nl.translation}\n\n## Public Comment of the Day\n${nl.public_comment_of_the_day}${clipMd}\n\n## LA Vibes\n${nl.la_vibes}\n\n## Numbers That Matter\n${nl.numbers_that_matter.map(b=>"- "+b).join("\n")}\n\n## What's Next\n${nl.whats_next}\n\n---\n_${nl.closing}_`;}
+$("btnCopy").addEventListener("click",()=>{navigator.clipboard.writeText(lastMarkdown).then(()=>{$("btnCopy").textContent="✓ Copied!";setTimeout(()=>$("btnCopy").textContent="📋 Copy as markdown",1500);});});
+$("btnPrint").addEventListener("click",()=>window.print());
+
+// On load: load sample AND auto-generate so the newsletter is visible immediately.
+loadSample();
+generate();
+</script>
+</body>
+</html>

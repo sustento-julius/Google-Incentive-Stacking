@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>3 Mins Local — How This App Works (Plain-English Guide)</title>
+<style>
+  :root{
+    --ink:#1d1b2e; --muted:#5b5870; --line:#ece9f5;
+    --paper:#ffffff; --wash:#faf7ff;
+    --sun:#ff7a45; --sun2:#ffb347; --grape:#6c4ad6; --sky:#2f9be0;
+    --leaf:#1fae8b; --rose:#e8527a;
+    --shadow:0 12px 30px rgba(60,40,120,.10);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--wash); line-height:1.6;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:0 22px}
+
+  /* Hero */
+  header.hero{
+    background:linear-gradient(135deg,var(--grape) 0%, var(--sun) 60%, var(--sun2) 100%);
+    color:#fff; padding:64px 0 76px; position:relative; overflow:hidden;
+  }
+  header.hero::after{
+    content:""; position:absolute; right:-80px; bottom:-90px; width:280px; height:280px;
+    background:rgba(255,255,255,.12); border-radius:50%;
+  }
+  .eyebrow{font-size:.8rem; letter-spacing:.18em; text-transform:uppercase; opacity:.9; font-weight:700}
+  header.hero h1{font-size:2.9rem; margin:.2em 0 .15em; line-height:1.05}
+  header.hero p.tag{font-size:1.25rem; max-width:34ch; opacity:.96; margin:0}
+  .pillrow{margin-top:26px; display:flex; gap:10px; flex-wrap:wrap}
+  .pill{background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.35);
+    padding:7px 14px; border-radius:999px; font-size:.85rem; font-weight:600; backdrop-filter:blur(3px)}
+
+  /* Sections */
+  main{padding:54px 0}
+  section{margin-bottom:54px}
+  h2{font-size:1.7rem; margin:0 0 6px; display:flex; align-items:center; gap:12px}
+  h2 .ico{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:1.1rem;color:#fff;flex:none}
+  .sub{color:var(--muted); margin:0 0 22px; font-size:1.05rem}
+
+  .card{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px 24px; box-shadow:var(--shadow)}
+  .card + .card{margin-top:16px}
+
+  /* Analogy callout */
+  .analogy{border-left:5px solid var(--sun); background:#fff7f2; border-radius:12px;
+    padding:16px 20px; margin:16px 0; font-size:1.02rem}
+  .analogy b{color:var(--sun)}
+
+  /* Pipeline flow */
+  .flow{display:flex; flex-direction:column; gap:0}
+  .step{display:flex; gap:18px; align-items:flex-start; padding:18px 0}
+  .step:not(:last-child){border-bottom:1px dashed var(--line)}
+  .num{flex:none; width:42px;height:42px;border-radius:50%; color:#fff; font-weight:800;
+    display:grid;place-items:center; font-size:1.05rem}
+  .step h3{margin:.1em 0 .25em; font-size:1.12rem}
+  .step p{margin:0; color:var(--muted)}
+  .step .plain{color:var(--ink); font-weight:600}
+
+  /* Knobs grid */
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+  @media(max-width:680px){.grid{grid-template-columns:1fr}}
+  .knob{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:18px 20px; box-shadow:var(--shadow)}
+  .knob .lvl{font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; padding:3px 9px; border-radius:999px; display:inline-block; margin-bottom:8px}
+  .easy{background:#e7f8f1; color:#0f8f6f}
+  .med{background:#fff2e0; color:#c9760d}
+  .knob h3{margin:.1em 0 .35em; font-size:1.05rem}
+  .knob p{margin:0; color:var(--muted); font-size:.96rem}
+  .knob .where{margin-top:10px; font-size:.82rem; color:var(--grape); font-weight:700}
+
+  /* sample newsletter */
+  .news{background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:var(--shadow)}
+  .news .top{background:linear-gradient(90deg,var(--grape),var(--sun)); color:#fff; padding:14px 20px; font-weight:700}
+  .news .body{padding:18px 22px}
+  .news h4{margin:16px 0 4px; font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; color:var(--sun)}
+  .news h4:first-child{margin-top:0}
+  .news p{margin:0 0 4px}
+  .news ul{margin:4px 0 0; padding-left:20px}
+  .news small{color:var(--muted)}
+
+  /* FAQ */
+  details{background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:4px 18px; margin-bottom:10px; box-shadow:var(--shadow)}
+  summary{cursor:pointer; font-weight:700; padding:12px 0; list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"＋"; color:var(--sun); font-weight:800; margin-right:10px}
+  details[open] summary::before{content:"－"}
+  details p{margin:0 0 14px; color:var(--muted)}
+
+  .tagrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .topic{font-size:.78rem;font-weight:700;padding:4px 10px;border-radius:999px;background:#f0ecfb;color:var(--grape)}
+
+  footer{background:var(--ink); color:#cbc7e0; padding:34px 0; font-size:.92rem}
+  footer b{color:#fff}
+  a{color:var(--grape)}
+  .note{background:#fffbe9;border:1px solid #ffe7a3;border-radius:12px;padding:14px 18px;font-size:.95rem}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">A plain-English guide · no coding required</div>
+    <h1>3 Mins Local</h1>
+    <p class="tag">The fastest way to understand what actually happened at LA City Hall.</p>
+    <div class="pillrow">
+      <span class="pill">🏛️ Reads city council meetings</span>
+      <span class="pill">🎤 Finds the best public comment</span>
+      <span class="pill">📰 Writes a 3-minute newsletter</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- WHAT -->
+  <section>
+    <h2><span class="ico" style="background:var(--sun)">💡</span> What is this thing?</h2>
+    <p class="sub">Imagine a really sharp friend who actually sits through every six-hour LA City Council meeting so you don't have to — then texts you the good parts.</p>
+    <div class="card">
+      <p style="margin-top:0">City government is important but <b>painfully boring to follow</b>. Meetings run for hours, the agendas are 1,400-page PDFs, and everything is written in confusing government-speak.</p>
+      <p style="margin-bottom:0"><b>3 Mins Local is a robot that does the boring part.</b> It grabs the meeting, reads the whole transcript, figures out what mattered, picks the most interesting thing a regular person said at the podium, translates the jargon into plain English, and writes a short, funny, easy-to-read newsletter — about a 3-minute read.</p>
+      <div class="analogy">📨 Think of it as <b>"Morning Brew for city government"</b> — or <b>The Daily Show meets your local news</b>. You finish each issue knowing what happened, why it matters, and you skipped the six hours of meetings.</div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section>
+    <h2><span class="ico" style="background:var(--grape)">⚙️</span> How it works, step by step</h2>
+    <p class="sub">The app is an <b>assembly line</b>. Raw meeting goes in one end; a finished newsletter comes out the other. Here are the stations:</p>
+    <div class="card">
+      <div class="flow">
+        <div class="step">
+          <div class="num" style="background:var(--sun)">1</div>
+          <div>
+            <h3>📅 Find the meetings</h3>
+            <p>It checks the LA City Clerk's online calendar for recent council and committee meetings. <span class="plain">(If the city's website blocks it, the app uses built-in sample meetings so it always works.)</span></p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num" style="background:var(--sun2)">2</div>
+          <div>
+            <h3>📝 Get the transcript</h3>
+            <p>The city often posts a written transcript ("CART"). If it does, the app reads that. If there's only a <b>video</b>, the app can listen to the audio and type it out automatically (using a tool called Whisper). <span class="plain">A transcript is just the meeting, written down.</span></p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num" style="background:var(--leaf)">3</div>
+          <div>
+            <h3>🙋 Figure out who's talking</h3>
+            <p>It sorts every line by speaker: <b>councilmember</b>, <b>city staff</b>, <b>the clerk</b>, or a <b>member of the public</b>. This is how it knows which parts are real public testimony.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num" style="background:var(--sky)">4</div>
+          <div>
+            <h3>🏆 Pick the best public comment</h3>
+            <p>Every public comment gets a score on four things: is it <b>newsworthy</b>, <b>emotional</b>, <b>quotable/viral</b>, and does it tie to a <b>real vote</b>? The highest score becomes the <b>"Public Comment of the Day."</b></p>
+            <div class="tagrow">
+              <span class="topic">housing</span><span class="topic">homelessness</span><span class="topic">policing</span>
+              <span class="topic">transit</span><span class="topic">Olympics</span><span class="topic">corruption</span>
+              <span class="topic">development</span><span class="topic">labor</span><span class="topic">climate</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num" style="background:var(--grape)">5</div>
+          <div>
+            <h3>🔤 Translate the government-speak</h3>
+            <p>It decodes jargon into plain English. The classic example: <br><i>"mobility corridor optimization"</i> → <b>"we're turning a car lane into a bus lane."</b></p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num" style="background:var(--rose)">6</div>
+          <div>
+            <h3>📰 Write the newsletter</h3>
+            <p>Finally it assembles everything into the finished issue — subject line, hook, bullets, big story, the public comment, "LA Vibes," numbers, and what's next — kept to about <b>500–700 words</b> (a 3-minute read). It saves the result as a file you can read or email.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- THE BRAIN -->
+  <section>
+    <h2><span class="ico" style="background:var(--sky)">🧠</span> Two "brains" — and why there's a Google key</h2>
+    <p class="sub">The writing in step 6 can be done two ways. The app picks automatically.</p>
+    <div class="grid">
+      <div class="knob">
+        <span class="lvl easy">Always works · free</span>
+        <h3>🤖 The built-in writer (templates)</h3>
+        <p>A set of smart fill-in-the-blank rules that I wrote into the app. It always produces a complete, correct newsletter with zero cost and no internet. The phrasing is a little more repetitive issue-to-issue.</p>
+      </div>
+      <div class="knob">
+        <span class="lvl med">Optional · needs a Google key</span>
+        <h3>✨ The AI writer (Google Gemini)</h3>
+        <p>When you add a Google API key, the app asks Google's AI to write fresh, witty, human-sounding prose for each issue. Same structure — better, less repetitive writing.</p>
+      </div>
+    </div>
+    <div class="note" style="margin-top:16px">
+      <b>"Why can't you just write it?"</b> — I did! The <i>rules</i> for how the newsletter is built are my writing. But the app is meant to run on its own every day, on meetings nobody has read yet. At that moment I'm not there to write — so it needs a writer on call. The built-in templates are that writer for free; Google's AI is an upgraded writer you can plug in. <b>You do not need the Google key for the app to work.</b>
+    </div>
+  </section>
+
+  <!-- SAMPLE OUTPUT -->
+  <section>
+    <h2><span class="ico" style="background:var(--sun2)">📨</span> What the result looks like</h2>
+    <p class="sub">Here's a real issue the app produced from a sample council meeting:</p>
+    <div class="news">
+      <div class="top">SUBJECT: Tenant Anti-Harassment Ordinance</div>
+      <div class="body">
+        <p><small><i>Good morning, LA. The City Council met so you didn't have to. Here's the 3-minute version.</i></small></p>
+        <h4>📋 What Actually Happened</h4>
+        <ul>
+          <li>Council <b>approved</b> the Tenant Anti-Harassment Ordinance, 12–0.</li>
+          <li>Council <b>punted</b> the Central Ave bus-lane project two weeks.</li>
+          <li>Council <b>approved</b> $12M for 200 interim housing beds, 11–1.</li>
+        </ul>
+        <h4>🔤 Translation From Government</h4>
+        <p>"Mobility corridor optimization" = turning a car lane into a bus lane.</p>
+        <h4>🎤 Public Comment of the Day</h4>
+        <p>Maria from Boyle Heights: <i>"My landlord shut off the hot water for three weeks to push us out… we are not numbers, we are your neighbors."</i></p>
+        <h4>🔢 Numbers That Matter</h4>
+        <ul><li><b>$12,000,000</b> — for 200 interim housing beds</li><li><b>12–0</b> — the tenant-protection vote</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT YOU CAN CHANGE -->
+  <section>
+    <h2><span class="ico" style="background:var(--leaf)">🎛️</span> What <em>you</em> can change</h2>
+    <p class="sub">You can adjust a lot without being a coder. Each card says how hard it is and which file holds the setting.</p>
+    <div class="grid">
+      <div class="knob">
+        <span class="lvl easy">Easy</span>
+        <h3>The personality / voice</h3>
+        <p>Make it funnier, more serious, more sarcastic, more neighborly. The "voice instructions" are written in plain English you can edit.</p>
+        <div class="where">file: generation/prompts.py</div>
+      </div>
+      <div class="knob">
+        <span class="lvl easy">Easy</span>
+        <h3>Which topics count as "big news"</h3>
+        <p>Add or remove the subjects the app cares about — e.g. add "schools" or "parks" so comments about them rank higher.</p>
+        <div class="where">file: config.py → TOPIC_KEYWORDS</div>
+      </div>
+      <div class="knob">
+        <span class="lvl easy">Easy</span>
+        <h3>The jargon dictionary</h3>
+        <p>Add your own "government-speak → plain English" translations. This is just a list of phrase pairs.</p>
+        <div class="where">file: config.py → GOVERNMENT_PHRASEBOOK</div>
+      </div>
+      <div class="knob">
+        <span class="lvl easy">Easy</span>
+        <h3>Newsletter length</h3>
+        <p>Want a 2-minute read or a 5-minute one? Change the target word count numbers.</p>
+        <div class="where">file: config.py → TARGET_WORDS…</div>
+      </div>
+      <div class="knob">
+        <span class="lvl med">Medium</span>
+        <h3>How comments are scored</h3>
+        <p>Decide whether "emotional" moments or "ties to a real vote" matter more, by changing the weighting numbers.</p>
+        <div class="where">file: processing/ranker.py → WEIGHTS</div>
+      </div>
+      <div class="knob">
+        <span class="lvl med">Medium</span>
+        <h3>Turn the AI writer on/off</h3>
+        <p>Add a Google key to a file named <b>.env</b> to switch on the AI writer; remove it to go back to the free built-in writer.</p>
+        <div class="where">file: .env → GEMINI_API_KEY</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW BUILT -->
+  <section>
+    <h2><span class="ico" style="background:var(--grape)">🔨</span> How it was built</h2>
+    <div class="card">
+      <p style="margin-top:0">It's written in <b>Python</b>, a popular and readable programming language. The code is organized like the assembly line above — each station is its own small file in a folder called <code>src/three_mins_local/</code>:</p>
+      <ul>
+        <li><b>sources/</b> — gets the meeting list and the transcript</li>
+        <li><b>processing/</b> — sorts speakers, finds &amp; scores public comments, analyzes the agenda</li>
+        <li><b>generation/</b> — writes the actual newsletter (templates or AI)</li>
+        <li><b>fixtures/</b> — the built-in sample meetings, so it always runs</li>
+        <li><b>tests/</b> — 28 automatic checks that confirm each part works</li>
+      </ul>
+      <p style="margin-bottom:0">A key design idea: <b>nothing ever fully breaks.</b> If the city website is down, it uses samples. If there's no transcript, it can transcribe the video. If there's no AI key, it uses the built-in writer. The app always produces a finished newsletter.</p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section>
+    <h2><span class="ico" style="background:var(--rose)">❓</span> Quick questions</h2>
+    <details><summary>Do I have to pay for anything?</summary><p>No. The app runs free using the built-in writer and sample data. The optional Google AI key may have a free tier, and heavy use can cost money — but it's entirely optional.</p></details>
+    <details><summary>Is it making things up?</summary><p>It's built to stay factual — it only writes from the transcript and agenda it was given, and it's specifically told not to invent votes, names, or quotes. The AI writer is also instructed never to mock ordinary residents — humor targets bureaucracy, not people.</p></details>
+    <details><summary>Can it cover cities other than LA?</summary><p>Yes, with some setup. The "find the meetings" and transcript steps are LA-specific today, but the scoring, translation, and newsletter parts would work anywhere you can feed in a transcript.</p></details>
+    <details><summary>How do I actually run it?</summary><p>A coder (or me) runs one command — <code>python -m three_mins_local run --print</code> — and it prints the newsletter and saves it as a file. The full instructions are in the project's README.</p></details>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p style="margin:0 0 6px"><b>3 Mins Local</b> — "I understand what happened, why it matters, and I didn't have to sit through six hours of public meetings."</p>
+    <p style="margin:0">This page is a plain-English explainer. The full code and setup live in the project's <b>README.md</b>.</p>
+  </div>
+</footer>
+
+</body>
+</html>
